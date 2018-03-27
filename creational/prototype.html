@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Prototype Design Pattern</title>
+</head>
+<body>
+	<h1>Prototype Module pattern</h1>
+	<script type="text/javascript">
+		// More efficient
+		// - easy to implement
+		// - JS is prototypical
+		// "The power in polymorphic design is to share behaviors."
+		(function () {
+
+			// Theoretically, the clone function should live inside the base exist inside the Cloned / Base object.
+			function clone (src, out) {
+				for(var attr in src.prototype) {
+					out.prototype[attr] = src.prototype[attr];
+				}
+			}
+
+			// The basic object
+			function Type() {
+				this.type = 'hello';
+			}
+			Type.prototype.setType = function (type) {
+				this.type = type;
+			}
+			Type.prototype.capitaliseType = function () {
+				return this.type.toUpperCase();
+			}
+			Type.prototype.flipType = function () {
+				this.type = (this.type == 'hello' ? 'goodbye' : 'hello');
+				return this.type;
+			}
+			Type.prototype.get = function () {
+				return this.type;
+			}
+
+
+			function NewType() {
+				this.type = 'how do you do?';
+			}
+			clone(Type, NewType);
+
+			function HelloBuilder() {
+				this.typeObj = new Type();
+				this.init();
+			}
+			HelloBuilder.prototype.init = function () {
+				var newType = new NewType();
+
+				this.typeObj.setType(this.typeObj.get() + ' and ' + newType.get());
+			}
+			HelloBuilder.prototype.get = function () {
+				return this.typeObj.get();
+			}
+
+			aFactory = function () {
+				var _types = {};
+				this.create = function (type) {
+
+					var returnObj = new _types[type]().get();
+					return returnObj;
+				};
+
+				this.register = function (type, cls) {
+
+					if(
+						cls.prototype.init && 
+						cls.prototype.get) {
+						_types[type] = cls;
+					}
+				}
+			},
+			aManager = (function () {
+
+				var instance,
+					_objectsToManage = [],
+					_aVar = 0,
+					_f = new aFactory();
+
+				// The managing object augments the factory to
+				// be aware of the different types if can create. 
+				// Con: This could live outside the manager,
+				// making it more flexible.
+				_f.register('hello' , HelloBuilder);
+				
+				function getAVar () {
+					return _aVar;
+				}
+
+				function setAVar (value) {
+					_aVar = value;
+				}
+
+				function create (type) {
+					var newObject = {
+						name: Math.random().toString(36).substring(5)
+					};
+					newObject.type = _f.create(type);
+					_objectsToManage.push(newObject);
+
+					return newObject;
+				}
+
+				function init () {
+					return instance = {
+
+						create: create
+					}
+				}
+
+				return {
+					getInstance:function () {
+						if(!instance) {
+							instance = init();
+						}
+
+						return instance;
+					}
+				};
+			})();
+
+			// There's only one manager. The one that
+			// is initially created (singleton)
+			var manager = aManager.getInstance(),
+			// ...then we create to randomObjs and use
+			// the factory to augment them.
+				randomObj1 = manager.create('hello');
+				
+			console.log(randomObj1);
+		})();
+
+	</script>
+</body>
+</html>

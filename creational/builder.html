@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Builder Design Pattern</title>
+</head>
+<body>
+	<h1>Builder Module pattern</h1>
+	<script type="text/javascript">
+		// Builder; 
+		// 	- builder does a lot more than a factory
+		//  - jQuery $ method is technically a builder
+		(function () {
+
+			// Create a Basic Object that has all
+			// the basic functionality that is common
+			// to that Object / Component
+			function Type() {
+				this.type = 'hello';
+			}
+			Type.prototype.capitaliseType = function () {
+				return this.type.toUpperCase();
+			}
+			Type.prototype.flipType = function () {
+				console.log(this.type);
+				this.type = (this.type == 'hello' ? 'goodbye' : 'hello');
+				return this.type;
+			}
+			Type.prototype.get = function () {
+				return this.type;
+			}
+
+			// Builders are used when more complex creational steps need to occur.
+			// For example, they can be used to when maybe more than one 
+			// components / extensions need to occur. These builders keep
+			// that business logic out of a factory and out of the singleton / manager.
+			// Then the Builder object is basically discarded when its not 
+			// required anymore.
+
+			// A builder takes the raw materials, 
+			// does something advance with then, 
+			// and returns the result.
+			function HelloBuilder() {
+				this.typeObj = new Type();
+				this.init();
+			}
+			HelloBuilder.prototype.init = function () {
+				// Nothing
+			}
+			HelloBuilder.prototype.get = function () {
+				return this.typeObj.get();
+			}
+
+			function GoodbyeBuilder() {
+				this.typeObj = new Type();
+				this.init();
+			}
+			GoodbyeBuilder.prototype.init = function () {
+				this.typeObj.flipType();
+			}
+			GoodbyeBuilder.prototype.get = function () {
+				return this.typeObj.get();
+			}
+
+			aFactory = function () {
+				var _types = {};
+				this.create = function (type) {
+
+					var returnObj = new _types[type]().get();
+					return returnObj;
+				};
+
+				// Here is where we dynamically register new types. 
+				// The factory doesn't need to know what types are being sent into it.
+				this.register = function (type, cls) {
+
+					if(
+						cls.prototype.init && 
+						cls.prototype.get) {
+						_types[type] = cls;
+					}
+				}
+			},
+			aManager = (function () {
+
+				var instance,
+					_objectsToManage = [],
+					_aVar = 0,
+					_f = new aFactory();
+
+				// The managing object augments the factory to
+				// be aware of the different types if can create. 
+				// Con: This could live outside the manager,
+				// making it more flexible.
+				_f.register('hello' , HelloBuilder);
+				_f.register('goodbye' , GoodbyeBuilder);
+
+				function getAVar () {
+					return _aVar;
+				}
+
+				function setAVar (value) {
+					_aVar = value;
+				}
+
+				function create (type) {
+					var newObject = {
+						name: Math.random().toString(36).substring(5)
+					};
+					newObject.type = _f.create(type);
+					_objectsToManage.push(newObject);
+
+					return newObject;
+				}
+
+				function init () {
+					return instance = {
+
+						create: create
+					}
+				}
+
+				return {
+					getInstance:function () {
+						if(!instance) {
+							instance = init();
+						}
+
+						return instance;
+					}
+				};
+			})();
+
+			// There's only one manager. The one that
+			// is initially created (singleton)
+			var manager = aManager.getInstance(),
+			// ...then we create to randomObjs and use
+			// the factory to augment them.
+				randomObj1 = manager.create('hello'),
+				randomObj2 = manager.create('goodbye');
+			
+			console.log(randomObj1);
+			console.log(randomObj2);
+
+			// Cons: Is complicated to follow for people 
+			// reading the code, but codes separate creational
+			// code into nice, reusable, discardable chunks.
+		})();
+
+	</script>
+</body>
+</html>
