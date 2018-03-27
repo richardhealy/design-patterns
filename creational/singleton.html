@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Singleton Module Design Pattern</title>
+</head>
+<body>
+	<h1>Singleton Module pattern</h1>
+	<script type="text/javascript">
+		// Singleton; 
+		// 	- Only one instance
+		//	- Delayed creation; when required
+		(function () {
+
+			var aSingleton = (function () {
+
+				var instance,
+					_aVar = 0;
+
+				function getAVar () {
+					return _aVar;
+				}
+
+				function setAVar (value) {
+					_aVar = value;
+				}
+
+				function init () {
+					return instance = {
+
+						getAVar: getAVar,
+						setAVar: setAVar
+					}
+				}
+
+				return {
+					getInstance:function () {
+						if(!instance) {
+							instance = init();
+						}
+
+						return instance;
+					}
+				};
+			})();
+
+			// Call the public method 
+			var instance = aSingleton.getInstance(),
+				instance2 = aSingleton.getInstance(),
+				instance3 = aSingleton.getInstance();
+			
+			// Doesn't matter what instance you update
+			// it only affect the one object
+			instance.setAVar(1);
+			instance2.setAVar(2);
+
+			// Will console out the value 2
+			console.log(instance3.getAVar());
+
+		})();
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Namespace Design Pattern</title>
+</head>
+<body>
+	<h1>Simple namespace / object literal pattern</h1>
+	<script type="text/javascript">
+		
+		// Get everything out of the global scope	
+		let aNamespace = {
+			avar: 'yo',
+			afunc: function (message) {
+				console.log(message)
+			},
+			bfunc: function () {
+				this.afunc(this.avar);
+			}
+		};
+
+		aNamespace.bfunc(); // > yo
+
+		// Con: you can't make a clone of object without affecting the other.
+		let bNamespace = aNamespace; // ...this is just a reference to aNamespace, not a different object
+		bNamespace.avar = 'bye';
+		bNamespace.bfunc(); // > bye
+
+		// ...see that that var in avar is also affected as both bNamespace and aNamespace are the same object
+		bNamespace.bfunc(); // > bye
+
+	</script>
+</body>
+</html>

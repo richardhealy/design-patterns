@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Reveal Module Design Pattern</title>
+</head>
+<body>
+	<h1>Reveal Module pattern</h1>
+	<script type="text/javascript">
+		// Good explanation: https://toddmotto.com/mastering-the-module-pattern/
+
+		// Creating real privacy control
+		// Having a clear api.
+
+		// breakdown: 
+		//  - wrapping (): to prevent the  `SyntaxError: Unexpected token )` error thrown by JS.
+		//  - function () {}: creates a new scope outside of the global scope
+		//  - ending (): calls the previous function immediately (Immediately-Invoked Function Expression aka IIFE)
+
+		var aModule = (function () {
+
+			// Convention for the private method and
+			// variables is to put the _ in front name
+			var _aVar = 'yo';
+			function _aPrivateMethod(message) {
+				console.log(message)
+			};
+			function _bPrivateMethod() {
+				_aPrivateMethod(_aVar);
+			}
+			function aPublicMethod:function () {
+				_bPrivateMethod();
+			}
+
+			// Reveal the functions that we want public
+			return {
+				aPublicMethod:aPublicMethod
+			};
+		})();
+
+		// Call the public method 
+		aModule.aPublicMethod();
+
+		try {
+			// try and call the private method
+			aModule._bPrivateMethod();
+
+		} catch(e) {
+			// Will give you `TypeError: aModule.bPrivateMethod is not a function`
+			console.log(e);
+		}
+
+	</script>
+</body>
+</html>
