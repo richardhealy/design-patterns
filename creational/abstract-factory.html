@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Abstract Factory Design Pattern</title>
+</head>
+<body>
+	<h1>Abstract Factory Module pattern</h1>
+	<script type="text/javascript">
+		// Abstract Factory; 
+		// 	- make the factory more dynamic
+		//  - usually a maturing factory
+		(function () {
+
+			function Hello () {}
+			Hello.prototype.create = function () {
+				return 'hello';
+			}
+
+			function Goodbye () {}
+			Goodbye.prototype.create = function () {
+				return 'goodbye';
+			}
+
+			aFactory = function () {
+				var _types = {};
+				this.create = function (type) {
+					var returnObj = new _types[type]().create();
+					
+					return returnObj;
+				};
+
+				// Here is where we dynamically register new types. 
+				// The factory doesn't need to know what types are being sent into it.
+				this.register = function (type, cls) {
+
+					if(cls.prototype.create) {
+						_types[type] = cls;
+					}
+				}
+			},
+			aManager = (function () {
+
+				var instance,
+					_objectsToManage = [],
+					_aVar = 0,
+					_f = new aFactory();
+
+				// The managing object augments the factory to be aware of the different types if can create. 
+				// Con: This could live outside the manager, making it more flexible.
+				_f.register('hello' , Hello);
+				_f.register('goodbye' , Goodbye);
+
+				function getAVar () {
+					return _aVar;
+				}
+
+				function setAVar (value) {
+					_aVar = value;
+				}
+
+				function create (type) {
+					var newObject = {
+						name: Math.random().toString(36).substring(5)
+					};
+					newObject.type = _f.create(type);
+					_objectsToManage.push(newObject);
+
+					return newObject;
+				}
+
+				function init () {
+					return instance = {
+
+						create: create
+					}
+				}
+
+				return {
+					getInstance:function () {
+						if(!instance) {
+							instance = init();
+						}
+
+						return instance;
+					}
+				};
+			})();
+
+			// There's only one manager. The one that is initially created (singleton)
+			var manager = aManager.getInstance(),
+			// ...then we create to randomObjs and use the factory to augment them.
+				randomObj1 = manager.create('hello'),
+				randomObj2 = manager.create('goodbye');
+			
+			console.log(randomObj1);
+			console.log(randomObj2);
+
+			// Cons: The factory is in the init() 
+			// function. Which makes it more rigid. 
+			// Sometimes you make want to augment the object 
+			// after it has been created 
+
+		})();
+
+	</script>
+</body>
+</html>
