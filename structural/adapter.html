@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Prototype Design Pattern</title>
+	<title>Adapter Design Pattern</title>
+	<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
 </head>
 <body>
-	<h1>Prototype pattern</h1>
+	<h1>Adapter pattern</h1>
+	<div id="stage"></div>
 	<script type="text/javascript">
-		// More efficient
-		// - easy to implement
-		// - JS is prototypical
-		// "The power in polymorphic design is to share behaviors."
 		(function () {
 
-			// Theoretically, the clone function should live inside the base exist inside the Cloned / Base object.
-			function clone (src, out) {
-				for(var attr in src.prototype) {
-					out.prototype[attr] = src.prototype[attr];
-				}
+			function StageAdapter (id) {
+				this.index = 0;
+				this.context = $(id);
 			}
+			StageAdapter.prototype.SIG = "stageItem_";
+			StageAdapter.prototype.add = function (item) {
+				++this.index;
+				$(item).attr({'id':this.SIG + this.index});
+				this.context.append(item);
+			}
+			StageAdapter.prototype.remove = function (item) {
+				this.context.remove('#' + this.SIG + index);
+			}
+
 
 			// The basic object
 			function Type() {
@@ -36,21 +45,12 @@
 			Type.prototype.get = function () {
 				return this.type;
 			}
-
-
-			function NewType() {
-				this.type = 'how do you do?';
-			}
-			clone(Type, NewType);
-
 			function HelloBuilder() {
 				this.typeObj = new Type();
 				this.init();
 			}
 			HelloBuilder.prototype.init = function () {
-				var newType = new NewType();
-
-				this.typeObj.setType(this.typeObj.get() + ' and ' + newType.get());
+				// Nothing going on here!
 			}
 			HelloBuilder.prototype.get = function () {
 				return this.typeObj.get();
@@ -78,16 +78,28 @@
 				var instance,
 					_objectsToManage = [],
 					_aVar = 0,
-					_f = new aFactory();
-
-				// The managing object augments the factory to
-				// be aware of the different types if can create. 
-				// Con: This could live outside the manager,
-				// making it more flexible.
-				_f.register('hello' , HelloBuilder);
+					_f = new aFactory(),
+					_stage;
 				
 				function getAVar () {
 					return _aVar;
+				}
+
+				function register (name, cls) {
+					_f.register(name , cls);
+				}
+
+				function displayOnStage () {
+
+					// `add` doesn't exist to JQuery, 
+					// we should be using append, 
+					// but we are going to use an adapter to
+					// proxy the two functions.
+					_stage.add('<div>' + _objectsToManage[0].type + '</div>');
+				}
+
+				function setStage (stage) {
+					_stage = stage;
 				}
 
 				function setAVar (value) {
@@ -107,7 +119,10 @@
 				function init () {
 					return instance = {
 
-						create: create
+						create: create,
+						register: register,
+						setStage: setStage,
+						displayOnStage: displayOnStage
 					}
 				}
 
@@ -122,12 +137,12 @@
 				};
 			})();
 
-			// There's only one manager. The one that
-			// is initially created (singleton)
-			var manager = aManager.getInstance(),
-			// ...then we create to randomObjs and use
-			// the factory to augment them.
-				randomObj1 = manager.create('hello');
+			var manager = aManager.getInstance();
+
+			manager.register('hello', HelloBuilder);
+			var randomObj1 = manager.create('hello');
+			manager.setStage(new StageAdapter('#stage'));
+			manager.displayOnStage();
 				
 			console.log(randomObj1);
 		})();
