@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Flyweight Design Pattern</title>
+	<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+</head>
+<body>
+	<h1>Fly Weight pattern</h1>
+	<div id="stage"></div>
+	<script type="text/javascript">
+		(function () {
+
+			// Fly Weight design pattern
+			//  - Reduces memory usage of large objects
+			//  - Reduce size of multiple used objects, extracting / reducing properties and methods
+			//  - Adds the functionality when it is needed
+
+			function StageAdapter (id) {
+				this.index = 0;
+				this.context = $(id);
+			}
+			StageAdapter.prototype.SIG = "stageItem_";
+			StageAdapter.prototype.add = function (item) {
+				++this.index;
+				$(item).attr({'id':this.SIG + this.index});
+				this.context.append(item);
+			}
+			StageAdapter.prototype.remove = function (item) {
+				this.context.remove('#' + this.SIG + index);
+			}
+
+
+
+
+
+			function Type() {
+				this.name = Math.random().toString(36).substring(5);
+				this.type = 'hello';
+			}
+			Type.prototype.setType = function (type) {
+				this.type = type;
+			}
+			Type.prototype.capitaliseType = function () {
+				return this.type.toUpperCase();
+			}
+			Type.prototype.flipType = function () {
+				this.type = (this.type == 'hello' ? 'goodbye' : 'hello');
+				return this.type;
+			}
+			Type.prototype.get = function () {
+				return this.type;
+			}
+			Type.prototype.consoleOut = function () {
+				console.log('Echo recieved: ' + this.name);
+			}
+
+
+
+
+			function reverseNameDecorator(obj) {
+				obj.reverseName = function () {
+					this.name = this.name.split("").reverse().join("");
+				};
+			}
+
+
+			// Flyweight function
+			function flyWeightCaptializeN2 (item) {
+				var res = "";
+				if(typeof item.type === 'string') {
+
+					for (i=0; i < item.type.length; i++) {
+						res += i % 2 == 0 ? item.type.charAt(i).toUpperCase() : item.type.charAt(i);
+					}
+
+					item.type = res;
+					return item.type;
+
+				} else {
+					return false;
+				}
+ 			}
+
+
+
+			function HelloBuilder() {
+				this.typeObj = new Type();
+				this.init();
+
+
+			}
+			HelloBuilder.prototype.init = function () {
+
+				// Add the extra functionality to the obj
+				reverseNameDecorator(this.typeObj);
+			}
+			HelloBuilder.prototype.get = function () {
+				return this.typeObj;
+			}
+
+
+			aFactory = function () {
+				var _types = {};
+				this.create = function (type) {
+
+					var returnObj = new _types[type]().get();
+					return returnObj;
+				};
+
+				this.register = function (type, cls) {
+
+				if(
+					cls.prototype.init && 
+					cls.prototype.get) {
+					_types[type] = cls;
+					}
+				}
+			};
+
+
+			function CompositeController (item) {
+				this.a = item;
+			}
+
+			CompositeController.prototype.action = function (act) {
+				var  args = Array.prototype.slice.call(arguments);
+					args.shift();
+
+				for(var item in this.a) {
+					this.a[item][act].apply(this.a[item], args);
+				}
+			}
+
+
+
+
+
+
+
+			var aManager = (function () {
+
+				var instance,
+					_objectsToManage = [],
+					_aVar = 0,
+					_f = new aFactory(),
+					_stage,
+					_cc = new CompositeController(_objectsToManage);
+				
+				function getAVar () {
+					return _aVar;
+				}
+
+				function register (name, cls) {
+					_f.register(name , cls);
+				}
+
+				function displayOnStage () {
+
+					_stage.add('<div>' + _objectsToManage[0].type + '</div>');
+				}
+
+				function setStage (stage) {
+					_stage = stage;
+				}
+
+				function setAVar (value) {
+					_aVar = value;
+				}
+
+				function create (type) {
+					var newObject = null;
+					newObject = _f.create(type);
+					_objectsToManage.push(newObject);
+
+					return newObject;
+				}
+
+				// The manager fires one action on the _cc. This
+				// then called that `action` on each of the items
+				// received eariler. 
+				function echoAll() {
+					_cc.action('consoleOut');
+				}
+
+				function init () {
+					return instance = {
+
+						create: create,
+						register: register,
+						setStage: setStage,
+						displayOnStage: displayOnStage,
+						echoAll: echoAll
+					}
+				}
+
+				return {
+					getInstance:function () {
+						if(!instance) {
+							instance = init();
+						}
+
+						return instance;
+					}
+				};
+			})();
+
+			var manager = aManager.getInstance();
+
+			manager.register('hello', HelloBuilder);
+			var randomObj1 = manager.create('hello');
+			var randomObj2 = manager.create('hello');
+
+			randomObj1.reverseName();
+
+			manager.setStage(new StageAdapter('#stage'));
+			manager.displayOnStage();
+
+			console.log(flyWeightCaptializeN2(randomObj1));
+
+			manager.echoAll();
+		})();
+
+	</script>
+</body>
+</html>

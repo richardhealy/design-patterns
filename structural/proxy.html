@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Proxy Design Pattern</title>
+	<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+</head>
+<body>
+	<h1>Proxy pattern</h1>
+	<div id="stage"></div>
+	<script type="text/javascript">
+		(function () {
+
+			// Proxy design pattern
+			//  - when a function / object behaves as if its another one.
+			//  - Checkout the use of Proxy's control, influence and monitor.
+			//  - Explode the gateways to the real objects
+
+			function StageAdapter (id) {
+				this.index = 0;
+				this.context = $(id);
+			}
+			StageAdapter.prototype.SIG = "stageItem_";
+			StageAdapter.prototype.add = function (item) {
+				++this.index;
+				$(item).attr({'id':this.SIG + this.index});
+				this.context.append(item);
+			}
+			StageAdapter.prototype.remove = function (item) {
+				this.context.remove('#' + this.SIG + index);
+			}
+
+
+
+
+
+			function Type() {
+				this.name = Math.random().toString(36).substring(5);
+				this.type = 'hello';
+			}
+			Type.prototype.setType = function (type) {
+				this.type = type;
+			}
+			Type.prototype.capitaliseType = function () {
+				return this.type.toUpperCase();
+			}
+			Type.prototype.flipType = function () {
+				this.type = (this.type == 'hello' ? 'goodbye' : 'hello');
+				return this.type;
+			}
+			Type.prototype.getId = function () {
+				
+				return this.id;
+			}
+			Type.prototype.setId = function (id) {
+				
+				this.id = id;
+			}
+
+			// Façade Pattern, we're going to 
+			// hide this to outside world.
+			Type.prototype.get = function () {
+				return this.type;
+			}
+			Type.prototype.consoleOut = function () {
+				console.log('Echo recieved: ' + this.name);
+			}
+
+			// Binder is the Proxy Function
+			function binder(scope, func) {
+				return function () {
+					return func.apply(scope, arguments);
+				}
+			}
+
+
+			// To see how this worked previously, see façade design pattern
+			function typeFacade(type) {
+				return {
+					setType:binder(type, type.setType),
+					capitaliseType: binder(type, type.capitaliseType),
+					flipType:binder(type, type.flipType),
+					consoleOut: binder(type, type.consoleOut),
+					getId: binder(type, type.getId),
+					reverseName: binder(type, type.reverseName)
+				}
+			}
+
+
+
+
+			function reverseNameDecorator(obj) {
+				obj.reverseName = function () {
+					this.name = this.name.split("").reverse().join("");
+				};
+			}
+
+
+			function HelloBuilder() {
+				this.typeObj = new Type();
+				this.init();
+
+			}
+			HelloBuilder.prototype.init = function () {
+
+				// Add the extra functionality to the obj
+				reverseNameDecorator(this.typeObj);
+			}
+			HelloBuilder.prototype.get = function () {
+				return this.typeObj;
+			}
+
+
+			aFactory = function () {
+				var _types = {};
+				this.create = function (type) {
+
+					var returnObj = new _types[type]().get();
+					console.log(returnObj);
+					return returnObj;
+				};
+
+				this.register = function (type, cls) {
+
+				if(
+					cls.prototype.init && 
+					cls.prototype.get) {
+					_types[type] = cls;
+					}
+				}
+			};
+
+
+			function CompositeController (item) {
+				this.a = item;
+			}
+
+			CompositeController.prototype.action = function (act) {
+				var  args = Array.prototype.slice.call(arguments);
+					args.shift();
+
+				for(var item in this.a) {
+					this.a[item][act].apply(this.a[item], args);
+				}
+			}
+
+
+
+
+
+
+
+			var aManager = (function () {
+
+				var instance,
+					_objectsToManage = [],
+					_aVar = 0,
+					_f = new aFactory(),
+					_stage,
+					_cc = new CompositeController(_objectsToManage);
+				
+
+				function create (type) {
+					var newObject = null;
+					newObject = _f.create(type);
+					newObject.setId(_objectsToManage.length);
+					_objectsToManage.push(newObject);
+
+					return typeFacade(newObject);
+				}
+
+				function getAVar () {
+					return _aVar;
+				}
+
+				function register (name, cls) {
+					_f.register(name , cls);
+				}
+
+				function displayOnStage () {
+
+					_stage.add('<div>' + _objectsToManage[0].type + '</div>');
+				}
+
+				function setStage (stage) {
+					_stage = stage;
+				}
+
+				function setAVar (value) {
+					_aVar = value;
+				}
+
+				function echoAll() {
+					_cc.action('consoleOut');
+				}
+
+				function init () {
+					return instance = {
+
+						create: create,
+						register: register,
+						setStage: setStage,
+						displayOnStage: displayOnStage,
+						echoAll: echoAll
+					}
+				}
+
+				return {
+					getInstance:function () {
+						if(!instance) {
+							instance = init();
+						}
+
+						return instance;
+					}
+				};
+			})();
+
+			var manager = aManager.getInstance();
+
+			manager.register('hello', HelloBuilder);
+			var randomObj1 = manager.create('hello');
+			
+			randomObj1.reverseName();
+
+			manager.setStage(new StageAdapter('#stage'));
+			manager.displayOnStage();
+
+			manager.echoAll();
+		})();
+
+	</script>
+</body>
+</html>
